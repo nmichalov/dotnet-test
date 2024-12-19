@@ -1,4 +1,4 @@
-name: Endor Labs Main Branch Check for Secrets and Vulns
+name: Endor Labs Main Branch Check for Vulns
 on:
 #   push:
 #     branches: [ main ]
@@ -15,8 +15,10 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
+    - name: Restore 
+      run: dotnet restore
     - name: Build Package
-      run: dotnet build
+      run: dotnet build '**/*.csproj'
     - name: Endor Labs Scan Main
       uses: endorlabs/github-action@v1.1.4
       with:
