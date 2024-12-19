@@ -1,0 +1,53 @@
+trigger:
+- '*'
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  - group: endor-test
+  - name: Build.Platform
+    value: Any CPU
+  - name: Build.Configuration
+    value: Release
+
+
+name: Test build
+
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - job: build
+    displayName: Build
+    steps:
+
+    - bash: curl -O https://api.endorlabs.com/download/endorlabs/v1.6.694/binaries/endorctl_v1.6.694_windows_amd64.exe -o endorctl.exe
+      displayName: 'Endor Download'
+
+    - script: dir /s /b
+      displayName: 'dir contents'
+
+    - script: ren endorctl_v1.6.694_windows_amd64.exe endorctl.exe
+      displayName: 'rename exe'
+
+    - script: certutil -hashfile .\endorctl.exe SHA256
+      displayName: 'certutil'
+
+    - task: DotNetCoreCLI@2
+      displayName: Build project
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+
+    # - task: VSBuild@1
+    #   displayName: Build solution
+    #   inputs:
+    #     solution: src\testProj1\testProj1\testProj1.csproj
+    #     platform: $(Build.Platform)
+    #     configuration: $(Build.Configuration)
+    #     msbuildArgs: /t:Restore;Build
+
+    - script: endorctl.exe scan --api-key $(ENDOR_API_CREDENTIALS_KEY) --api-secret $(ENDOR_API_CREDENTIALS_SECRET) --as-default-branch=true --detached-ref-name=main -n mach7t.vna
+      displayName: 'Endor Scan'
