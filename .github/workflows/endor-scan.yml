@@ -1,0 +1,33 @@
+name: Endor Labs Main Branch Check for Secrets and Vulns
+on:
+#   push:
+#     branches: [ main ]
+  workflow_dispatch:
+jobs:
+  scan:
+    permissions:
+      security-events: write 
+      contents: read 
+      actions: read
+      id-token: write 
+      issues: write
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+    - name: Build Package
+      run: dotnet build
+    - name: Endor Labs Scan Main
+      uses: endorlabs/github-action@v1.1.4
+      with:
+        namespace: 'nate-learn' 
+        scan_dependencies: true
+        scan_secrets: true
+        pr: false
+        scan_summary_output_type: 'table'
+        sarif_file: 'findings.sarif'
+        additional_args: '--bypass-host-check'
+    - name: Upload findings to github
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'findings.sarif'
